@@ -174,7 +174,14 @@ export default function Sidebar() {
           <Settings size={18} />
           <span>Cài đặt hệ thống</span>
         </Link>
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-2xl transition-all border border-transparent hover:border-red-100">
+        <button 
+          onClick={() => {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            window.location.href = '/login';
+          }}
+          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-2xl transition-all border border-transparent hover:border-red-100"
+        >
           <LogOut size={18} />
           <span>Đăng xuất</span>
         </button>

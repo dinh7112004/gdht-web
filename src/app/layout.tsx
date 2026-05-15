@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Loader2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,6 +15,59 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Authentication Check
+    const checkAuth = () => {
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        setIsAuthenticated(false);
+        if (pathname !== '/login') {
+          router.push('/login');
+        }
+      } else {
+        setIsAuthenticated(true);
+        if (pathname === '/login') {
+          router.push('/');
+        }
+      }
+    };
+
+    checkAuth();
+    
+    // Optional: Add event listener for storage changes (to handle logout in other tabs)
+    const handleStorageChange = () => checkAuth();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [pathname, router]);
+
+  // Loading State
+  if (isAuthenticated === null && pathname !== '/login') {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <div className="h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] text-white">
+            <Loader2 className="animate-spin text-emerald-500 mb-4" size={48} />
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Initializing Secure Session...</p>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
+  // Login Page Layout
+  if (pathname === '/login') {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">
@@ -63,3 +117,4 @@ export default function RootLayout({
     </html>
   );
 }
+
