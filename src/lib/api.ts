@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const BASE_URL = 'http://localhost:3001';
+export const BASE_URL = 'https://gdht-backend.onrender.com';
+// export const BASE_URL = 'http://localhost:3000';
 
 export const resolveImageUrl = (url: string | null | undefined) => {
   if (!url) return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";

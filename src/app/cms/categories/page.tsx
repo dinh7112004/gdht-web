@@ -10,6 +10,7 @@ import api from "@/lib/api";
 export default function CMSCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,7 +26,17 @@ export default function CMSCategoriesPage() {
 
   useEffect(() => {
     fetchData();
+    fetchSubjects();
   }, []);
+
+  const fetchSubjects = async () => {
+    try {
+      const res = await api.get("/subjects");
+      setSubjects(res.data);
+    } catch (e) {
+      console.error("Failed to fetch subjects", e);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -222,18 +233,18 @@ export default function CMSCategoriesPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Môn học</label>
-                  <select 
+                  <input 
+                    list="subject-list"
                     value={formData.subject}
                     onChange={(e) => setFormData({...formData, subject: e.target.value})}
                     className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none outline-none text-sm font-bold text-slate-900"
-                  >
-                    <option value="Toán học">Toán học</option>
-                    <option value="Ngữ văn">Ngữ văn</option>
-                    <option value="Lịch sử">Lịch sử</option>
-                    <option value="Địa lý">Địa lý</option>
-                    <option value="Khoa học">Khoa học</option>
-                    <option value="Ngoại ngữ">Ngoại ngữ</option>
-                  </select>
+                    placeholder="Chọn hoặc nhập môn học..."
+                  />
+                  <datalist id="subject-list">
+                    {subjects.map(sub => (
+                      <option key={sub._id} value={sub.name} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 

@@ -117,9 +117,9 @@ export default function Student360Detail() {
               <div className="relative p-1 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-6 group-hover:rotate-3 transition-transform flex items-center justify-center w-32 h-32">
                 <img 
                   src={user.equippedItems?.avatarId?.imageUrl 
-                    ? (user.equippedItems.avatarId.imageUrl.startsWith('http') ? user.equippedItems.avatarId.imageUrl : `http://localhost:3001${user.equippedItems.avatarId.imageUrl}`) 
+                    ? (user.equippedItems.avatarId.imageUrl.startsWith('http') ? user.equippedItems.avatarId.imageUrl : `http://localhost:3000${user.equippedItems.avatarId.imageUrl}`) 
                     : (user.avatar 
-                        ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:3001${user.avatar}`)
+                        ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:3000${user.avatar}`)
                         : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fullName}`)} 
                   alt={user.fullName}
                   className={`${user.equippedItems?.frameId ? 'w-24 h-24' : 'w-32 h-32'} rounded-full object-cover border-4 border-white premium-shadow transition-all`}
@@ -127,7 +127,7 @@ export default function Student360Detail() {
                 
                 {user.equippedItems?.frameId && (
                   <img 
-                    src={user.equippedItems.frameId.imageUrl.startsWith('http') ? user.equippedItems.frameId.imageUrl : `http://localhost:3001${user.equippedItems.frameId.imageUrl}`}
+                    src={user.equippedItems.frameId.imageUrl.startsWith('http') ? user.equippedItems.frameId.imageUrl : `http://localhost:3000${user.equippedItems.frameId.imageUrl}`}
                     alt="Frame"
                     className="absolute inset-0 w-full h-full object-contain pointer-events-none scale-110"
                   />
@@ -149,7 +149,7 @@ export default function Student360Detail() {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Cấp lớp</p>
-                  <p className="font-bold text-slate-700">Lớp 11A1</p>
+                  <p className="font-bold text-slate-700">{user.className || "Chưa vào lớp học"}</p>
                 </div>
               </div>
 

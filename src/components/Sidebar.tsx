@@ -21,9 +21,7 @@ const menuItems = [
     icon: Users,
     subItems: [
       { name: "Danh sách tài khoản", path: "/users" },
-      { name: "Duyệt Giáo viên", path: "/users/teachers" },
       { name: "Phân quyền (RBAC)", path: "/users/rbac" },
-      { name: "Quản lý Onboarding", path: "/users/onboarding" },
     ]
   },
   {
@@ -40,10 +38,8 @@ const menuItems = [
     subItems: [
       { name: "Danh mục di sản", path: "/cms/categories" },
       { name: "Quản lý Bài học", path: "/cms/lessons" },
+      { name: "Quản lý Môn học", path: "/cms/subjects" },
       { name: "Ngân hàng câu hỏi", path: "/cms/quizzes" },
-      { name: "Soạn bài Story Mode", path: "/cms/editor" },
-      { name: "Quản lý Kho tư liệu", path: "/cms/collections" },
-      { name: "Quản lý Tài nguyên", path: "/cms/assets" },
     ]
   },
   {

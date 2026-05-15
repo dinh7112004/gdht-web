@@ -20,6 +20,7 @@ export default function CMSLessonsPage() {
     title: '',
     description: '',
     category: '',
+    categoryId: '',
     imageUrl: '',
     content: '',
     xpReward: 100,
@@ -46,7 +47,11 @@ export default function CMSLessonsPage() {
       setCategories(categoriesRes.data);
       setClasses(classesRes.data || []);
       if (categoriesRes.data.length > 0) {
-        setFormData(prev => ({ ...prev, category: categoriesRes.data[0].name }));
+        setFormData(prev => ({ 
+          ...prev, 
+          category: categoriesRes.data[0].name,
+          categoryId: categoriesRes.data[0]._id
+        }));
       }
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -72,6 +77,7 @@ export default function CMSLessonsPage() {
       title: lesson.title,
       description: lesson.description,
       category: lesson.category,
+      categoryId: lesson.categoryId || '',
       imageUrl: lesson.imageUrl || '',
       content: lesson.content || '',
       xpReward: lesson.xpReward,
@@ -106,6 +112,7 @@ export default function CMSLessonsPage() {
       title: '',
       description: '',
       category: categories[0]?.name || '',
+      categoryId: categories[0]?._id || '',
       imageUrl: '',
       content: '',
       xpReward: 100,
@@ -257,11 +264,15 @@ export default function CMSLessonsPage() {
               <div>
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Chủ đề bài học</label>
                 <select 
-                  value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  value={formData.categoryId}
+                  onChange={(e) => {
+                    const cat = categories.find(c => c._id === e.target.value);
+                    setFormData({...formData, categoryId: e.target.value, category: cat?.name || ''});
+                  }}
                   className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none outline-none text-sm font-bold text-slate-900"
                 >
-                  {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                  <option value="">-- Chọn chủ đề --</option>
+                  {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                 </select>
               </div>
 
