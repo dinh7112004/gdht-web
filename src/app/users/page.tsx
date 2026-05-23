@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from "react";
-import { 
-  Users, Search, Filter, MoreVertical, 
+import {
+  Users, Search, Filter, MoreVertical,
   UserPlus, Shield, UserCheck, UserX,
   Mail, Phone, Calendar, ArrowRight,
-  X, Edit2, Trash2, CheckCircle2, Lock
+  X, Edit2, Trash2, CheckCircle2, Lock, Bell, Send
 } from "lucide-react";
 import api, { resolveImageUrl } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,8 @@ export default function UsersManagementPage() {
     fullName: "",
     email: "",
     password: "",
-    role: "STUDENT"
+    role: "STUDENT",
+    phone: "",
   });
 
   useEffect(() => {
@@ -64,8 +65,9 @@ export default function UsersManagementPage() {
       setFormData({
         fullName: user.fullName || "",
         email: user.email || "",
-        password: "", // Don't show password
-        role: user.role || "STUDENT"
+        password: "",
+        role: user.role || "STUDENT",
+        phone: user.phone || "",
       });
     } else {
       setEditingUser(null);
@@ -73,7 +75,8 @@ export default function UsersManagementPage() {
         fullName: "",
         email: "",
         password: "",
-        role: "STUDENT"
+        role: "STUDENT",
+        phone: "",
       });
     }
     setIsModalOpen(true);
@@ -99,15 +102,46 @@ export default function UsersManagementPage() {
     }
   };
 
+  // Notify modal state
+  const [notifyUser, setNotifyUser] = useState<any>(null);
+  const [notifyTitle, setNotifyTitle] = useState('');
+  const [notifyBody, setNotifyBody] = useState('');
+  const [notifySending, setNotifySending] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+
+  const handleSendNotify = async () => {
+    if (!notifyTitle.trim() || !notifyUser) return;
+    setNotifySending(true);
+    try {
+      await api.post('/notifications/push', {
+        title: notifyTitle.trim(),
+        body: notifyBody.trim(),
+        target: notifyUser._id,
+        type: 'general',
+      });
+      setNotifySuccess(true);
+      setTimeout(() => {
+        setNotifySuccess(false);
+        setNotifyUser(null);
+        setNotifyTitle('');
+        setNotifyBody('');
+      }, 2000);
+    } catch {
+      alert('Gửi thông báo thất bại');
+    } finally {
+      setNotifySending(false);
+    }
+  };
+
   const filteredUsers = Array.isArray(users) ? users.filter(u => {
     const matchesRole = filter === "ALL" || u.role === filter;
-    const matchesSearch = (u.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = (u.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (u.email || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesRole && matchesSearch;
   }) : [];
 
   return (
-    <div className="p-4 md:p-8 space-y-8 bg-[#FFFDF0] min-h-screen">
+    <div className="p-4 md:p-8 space-y-8 min-h-screen">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -123,7 +157,7 @@ export default function UsersManagementPage() {
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-[#FFFBEB] p-4 rounded-[32px] border border-[#FEF9C3] shadow-sm flex flex-wrap gap-4 items-center">
+      <div className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center">
         <div className="flex-1 min-w-[280px] relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
@@ -131,7 +165,7 @@ export default function UsersManagementPage() {
             placeholder="Tìm kiếm theo tên hoặc email..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#FFFDF0] border border-[#FEF9C3] rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-700"
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-700"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -142,7 +176,7 @@ export default function UsersManagementPage() {
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 filter === role 
                 ? "bg-emerald-600 text-white border-emerald-600 shadow-lg" 
-                : "bg-[#FFFDF0] text-slate-500 border-[#FEF9C3] hover:bg-[#FFFBEB]"
+                : "bg-white text-slate-500 border-slate-200/60 hover:bg-slate-50"
               }`}
             >
               {role === "ALL" ? "Tất cả" : role === "STUDENT" ? "Học sinh" : role === "TEACHER" ? "Giáo viên" : "Quản trị"}
@@ -152,13 +186,13 @@ export default function UsersManagementPage() {
       </div>
 
       {/* User Table */}
-      <div className="bg-[#FFFBEB] rounded-[40px] border border-[#FEF9C3] shadow-sm overflow-hidden overflow-x-auto custom-scrollbar">
+      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto custom-scrollbar">
         {loading ? (
           <div className="p-20 flex justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div></div>
         ) : (
           <table className="w-full text-left min-w-[800px]">
             <thead>
-              <tr className="bg-[#FFFDF0]/50 text-slate-500 text-[10px] uppercase font-black tracking-widest border-b border-[#FEF9C3]">
+              <tr className="bg-slate-50/50 text-slate-500 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
                 <th className="px-8 py-5">Người dùng</th>
                 <th className="px-8 py-5">Liên hệ</th>
                 <th className="px-8 py-5">Vai trò</th>
@@ -167,7 +201,7 @@ export default function UsersManagementPage() {
                 <th className="px-8 py-5 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#FEF9C3]">
+            <tbody className="divide-y divide-slate-100">
               {filteredUsers.map((user) => (
                 <tr 
                   key={user._id} 
@@ -176,7 +210,7 @@ export default function UsersManagementPage() {
                 >
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[#FFFDF0] flex items-center justify-center text-emerald-600 border border-[#FEF9C3] overflow-hidden shadow-sm">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-emerald-600 border border-slate-100 overflow-hidden shadow-sm">
                         {user.avatar ? (
                           <img 
                             src={resolveImageUrl(user.avatar)} 
@@ -236,13 +270,20 @@ export default function UsersManagementPage() {
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setNotifyUser(user); setNotifyTitle(''); setNotifyBody(''); }}
+                        className="p-2 bg-white text-amber-500 border border-amber-100 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                        title="Gửi thông báo"
+                      >
+                        <Bell size={16} />
+                      </button>
+                      <button
                         onClick={(e) => { e.stopPropagation(); handleOpenModal(user); }}
                         className="p-2 bg-white text-blue-500 border border-blue-100 rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-sm"
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => handleDelete(user._id, e)}
                         className="p-2 bg-white text-rose-500 border border-rose-100 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                       >
@@ -266,19 +307,19 @@ export default function UsersManagementPage() {
 
       {/* Create/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="bg-[#FFFDF0] w-full max-w-lg rounded-[40px] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in duration-300 border border-[#FEF9C3]">
-            <div className="p-8 border-b border-[#FEF9C3] flex justify-between items-center">
+          <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in duration-300 border border-slate-200/60">
+            <div className="p-5 sm:p-8 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-2xl font-black text-slate-800 tracking-tight">
                 {editingUser ? "CẬP NHẬT TÀI KHOẢN" : "TẠO TÀI KHOẢN MỚI"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-[#FFFBEB] border border-[#FEF9C3] flex items-center justify-center text-slate-500 hover:bg-[#FFFDF0] transition-all">
+              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all">
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+
+            <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Họ và tên</label>
                 <div className="relative">
@@ -289,7 +330,7 @@ export default function UsersManagementPage() {
                     value={formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                     placeholder="Nguyễn Văn A"
-                    className="w-full pl-12 pr-4 py-4 bg-[#FFFBEB] border border-[#FEF9C3] rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
                   />
                 </div>
               </div>
@@ -304,7 +345,7 @@ export default function UsersManagementPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     placeholder="example@gmail.com"
-                    className="w-full pl-12 pr-4 py-4 bg-[#FFFBEB] border border-[#FEF9C3] rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
                   />
                 </div>
               </div>
@@ -321,7 +362,21 @@ export default function UsersManagementPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-4 py-4 bg-[#FFFBEB] border border-[#FEF9C3] rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="0xxxxxxxxx"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
                   />
                 </div>
               </div>
@@ -362,6 +417,71 @@ export default function UsersManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Notify Modal */}
+      {notifyUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setNotifyUser(null)} />
+          <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl relative z-10 overflow-hidden border border-slate-200/60">
+            <div className="p-5 sm:p-8 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black text-slate-800 tracking-tight">Gửi thông báo</h3>
+                <p className="text-xs text-slate-400 mt-1">Đến: <span className="font-bold text-slate-600">{notifyUser.fullName}</span></p>
+              </div>
+              <button onClick={() => setNotifyUser(null)} className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 sm:p-8 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tiêu đề *</label>
+                <input
+                  type="text"
+                  placeholder="Nhập tiêu đề thông báo..."
+                  value={notifyTitle}
+                  onChange={e => setNotifyTitle(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-amber-400 outline-none text-sm font-medium text-slate-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nội dung</label>
+                <textarea
+                  placeholder="Nhập nội dung thông báo..."
+                  value={notifyBody}
+                  onChange={e => setNotifyBody(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-amber-400 outline-none text-sm font-medium text-slate-700 resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNotifyUser(null)}
+                  className="flex-1 py-3.5 bg-slate-100 text-slate-500 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSendNotify}
+                  disabled={!notifyTitle.trim() || notifySending}
+                  className="flex-[2] py-3.5 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  style={{
+                    background: notifySuccess ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#f59e0b,#d97706)',
+                    boxShadow: notifySuccess ? '0 4px 14px rgba(16,185,129,.3)' : '0 4px 14px rgba(245,158,11,.3)',
+                  }}
+                >
+                  {notifySuccess ? (
+                    <><CheckCircle2 size={16} /> Đã gửi!</>
+                  ) : notifySending ? (
+                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Đang gửi...</>
+                  ) : (
+                    <><Send size={16} /> Gửi thông báo</>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

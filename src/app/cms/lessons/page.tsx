@@ -136,23 +136,23 @@ export default function CMSLessonsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">QUẢN LÝ BÀI HỌC</h1>
           <p className="text-slate-500 font-medium">Biên tập nội dung kiến thức di sản và toán học cho App.</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}
-          className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center gap-2"
+          className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
         >
           <Plus size={20} /> Thêm bài học mới
         </button>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex gap-4 items-center">
+      <div className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
@@ -170,8 +170,8 @@ export default function CMSLessonsPage() {
       </div>
 
       {/* Lessons Table */}
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
           <thead>
             <tr className="bg-slate-50/50 text-slate-500 text-[10px] uppercase font-black tracking-widest">
               <th className="px-8 py-5">Bài học</th>

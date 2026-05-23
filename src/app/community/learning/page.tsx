@@ -39,8 +39,8 @@ export default function LearningModerationPage() {
   };
 
   return (
-    <div className="p-10 space-y-8 animate-fade-in">
-      <div className="flex justify-between items-end">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 lg:space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
             Duyệt <span className="text-blue-600">Cách học hay</span>
@@ -66,8 +66,8 @@ export default function LearningModerationPage() {
       </div>
 
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-blue-50/10">
-          <div className="relative w-96">
+        <div className="p-4 sm:p-6 lg:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-blue-50/10">
+          <div className="relative w-full sm:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
@@ -83,7 +83,7 @@ export default function LearningModerationPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[600px]">
             <thead>
               <tr className="text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
                 <th className="px-8 py-6">Mẹo học tập</th>

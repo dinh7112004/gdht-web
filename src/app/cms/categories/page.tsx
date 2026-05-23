@@ -19,10 +19,34 @@ export default function CMSCategoriesPage() {
     description: '', 
     imageUrl: '', 
     isFeatured: false,
-    isPublic: true,
+    isPublic: false,
     subject: 'Toán học',
     targetClassIds: [] as string[]
   });
+
+  const resolveImageUrl = (url: string | null | undefined): string => {
+    if (!url) return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+    // Trích xuất FILE_ID từ mọi dạng Google Drive URL
+    let fileId: string | null = null;
+
+    const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+    if (driveFileMatch) fileId = driveFileMatch[1];
+
+    const driveOpenMatch = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+    if (driveOpenMatch) fileId = driveOpenMatch[1];
+
+    const driveUcMatch = url.match(/[?&]id=([^&]+)/);
+    if (!fileId && driveUcMatch && url.includes('drive.google.com')) fileId = driveUcMatch[1];
+
+    const lh3Match = url.match(/lh3\.googleusercontent\.com\/d\/([^?/]+)/);
+    if (lh3Match) fileId = lh3Match[1];
+
+    // Dùng thumbnail API — hoạt động ổn định trong browser, không bị block
+    if (fileId) return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+
+    return url;
+  };
 
   useEffect(() => {
     fetchData();
@@ -77,7 +101,7 @@ export default function CMSCategoriesPage() {
     setFormData({
       name: cat.name,
       description: cat.description,
-      imageUrl: cat.imageUrl || '',
+      imageUrl: cat.imageUrl ?? '',
       isFeatured: cat.isFeatured,
       isPublic: cat.isPublic ?? true,
       subject: cat.subject || 'Toán học',
@@ -115,7 +139,7 @@ export default function CMSCategoriesPage() {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ name: '', description: '', imageUrl: '', isFeatured: false, isPublic: true, subject: 'Toán học', targetClassIds: [] });
+    setFormData({ name: '', description: '', imageUrl: '', isFeatured: false, isPublic: false, subject: 'Toán học', targetClassIds: [] });
   };
 
   const toggleClassSelection = (classId: string) => {
@@ -130,8 +154,8 @@ export default function CMSCategoriesPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">QUẢN LÝ CHỦ ĐỀ NỔI BẬT</h1>
           <p className="text-slate-500 font-medium">Đồng bộ các danh mục di sản lên màn hình chính của App Mobile.</p>
@@ -152,7 +176,7 @@ export default function CMSCategoriesPage() {
             <div key={cat._id} className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl transition-all group">
               <div className="h-48 w-full bg-slate-100 relative">
                 {cat.imageUrl ? (
-                  <img src={cat.imageUrl} alt={cat.name} className="w-full h-full object-cover" />
+                  <img src={resolveImageUrl(cat.imageUrl)} alt={cat.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300">
                     <ImageIcon size={48} />
@@ -174,7 +198,7 @@ export default function CMSCategoriesPage() {
                 <p className="text-xs text-slate-500 font-medium mb-4 line-clamp-2 h-8">{cat.description}</p>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {cat.isPublic ? (
+                  {cat.isPublic && (!cat.targetClassIds || cat.targetClassIds.length === 0) ? (
                     <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg">Công khai</span>
                   ) : (
                     <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase rounded-lg">Riêng tư ({cat.targetClassIds?.length || 0} lớp)</span>
@@ -216,7 +240,7 @@ export default function CMSCategoriesPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-[40px] p-10 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-[40px] p-6 sm:p-10 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-black text-slate-900 mb-6">{editingId ? 'Cập nhật chủ đề' : 'Thêm chủ đề mới'}</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -260,14 +284,14 @@ export default function CMSCategoriesPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-2">
-                  <label className="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl cursor-pointer border border-indigo-100">
-                    <input 
-                      type="checkbox"
-                      checked={formData.isPublic}
-                      onChange={(e) => setFormData({...formData, isPublic: e.target.checked})}
-                      className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
+                  <div className="col-span-2">
+                    <label className="flex items-center gap-3 p-4 bg-indigo-50 rounded-2xl cursor-pointer border border-indigo-100">
+                      <input 
+                        type="checkbox"
+                        checked={formData.isPublic}
+                        onChange={(e) => setFormData({...formData, isPublic: e.target.checked, targetClassIds: e.target.checked ? [] : formData.targetClassIds})}
+                        className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
+                      />
                     <div>
                       <span className="block text-sm font-black text-indigo-900">Công khai toàn trường</span>
                       <span className="text-xs font-medium text-indigo-600/70">Mọi học sinh đều có thể xem chủ đề này</span>

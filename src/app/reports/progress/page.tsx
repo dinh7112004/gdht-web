@@ -47,14 +47,14 @@ export default function ReportsProgressPage() {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Báo cáo & Thống kê</h1>
           <p className="text-slate-500 font-bold mt-1">Phân tích dữ liệu thực tế từ hoạt động của học sinh trên ứng dụng.</p>
         </div>
-        <button className="bg-emerald-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+        <button className="bg-emerald-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
           <Download size={20} /> Xuất PDF
         </button>
       </div>

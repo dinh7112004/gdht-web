@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Trophy, 
-  Zap, 
-  BookOpen, 
-  Award, 
-  Mail, 
-  Calendar, 
-  GraduationCap, 
+import {
+  Trophy,
+  Zap,
+  BookOpen,
+  Award,
+  Mail,
+  Calendar,
+  GraduationCap,
   ChevronRight,
   Search,
   Filter,
@@ -18,7 +18,10 @@ import {
   Languages,
   Activity,
   User as UserIcon,
-  ShieldCheck
+  ShieldCheck,
+  Send,
+  X,
+  CheckCircle2,
 } from 'lucide-react';
 import { 
   PieChart,
@@ -40,6 +43,35 @@ export default function Student360Detail() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<any>(null);
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [notifyTitle, setNotifyTitle] = useState('');
+  const [notifyBody, setNotifyBody] = useState('');
+  const [notifySending, setNotifySending] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+
+  const handleSendNotify = async () => {
+    if (!notifyTitle.trim()) return;
+    setNotifySending(true);
+    try {
+      await api.post('/notifications/push', {
+        title: notifyTitle.trim(),
+        body: notifyBody.trim(),
+        target: id,
+        type: 'general',
+      });
+      setNotifySuccess(true);
+      setTimeout(() => {
+        setNotifySuccess(false);
+        setNotifyOpen(false);
+        setNotifyTitle('');
+        setNotifyBody('');
+      }, 2000);
+    } catch {
+      alert('Gửi thông báo thất bại');
+    } finally {
+      setNotifySending(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -174,7 +206,9 @@ export default function Student360Detail() {
               </div>
             </div>
 
-            <button className="w-full mt-8 py-4 bg-[#1e293b] text-white font-bold rounded-2xl premium-shadow hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <button
+              onClick={() => setNotifyOpen(true)}
+              className="w-full mt-8 py-4 bg-[#1e293b] text-white font-bold rounded-2xl premium-shadow hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
               <Bell size={18} />
               GỬI THÔNG BÁO RIÊNG
             </button>
@@ -417,6 +451,72 @@ export default function Student360Detail() {
           <Languages size={24} />
         </button>
       </div>
+
+      {/* Notify Modal */}
+      {notifyOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setNotifyOpen(false)} />
+          <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl relative z-10 overflow-hidden border border-slate-200/60">
+            <div className="p-5 sm:p-8 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black text-slate-800 tracking-tight">Gửi thông báo riêng</h3>
+                <p className="text-xs text-slate-400 mt-1">Đến: <span className="font-bold text-slate-600">{data?.user?.fullName}</span></p>
+              </div>
+              <button onClick={() => setNotifyOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 sm:p-8 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tiêu đề *</label>
+                <input
+                  type="text"
+                  placeholder="Nhập tiêu đề thông báo..."
+                  value={notifyTitle}
+                  onChange={e => setNotifyTitle(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-amber-400 outline-none text-sm font-medium text-slate-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nội dung</label>
+                <textarea
+                  placeholder="Nhập nội dung thông báo..."
+                  value={notifyBody}
+                  onChange={e => setNotifyBody(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl focus:ring-2 focus:ring-amber-400 outline-none text-sm font-medium text-slate-700 resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNotifyOpen(false)}
+                  className="flex-1 py-3.5 bg-slate-100 text-slate-500 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSendNotify}
+                  disabled={!notifyTitle.trim() || notifySending}
+                  className="flex-[2] py-3.5 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  style={{
+                    background: notifySuccess ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#f59e0b,#d97706)',
+                    boxShadow: notifySuccess ? '0 4px 14px rgba(16,185,129,.3)' : '0 4px 14px rgba(245,158,11,.3)',
+                  }}
+                >
+                  {notifySuccess ? (
+                    <><CheckCircle2 size={16} /> Đã gửi!</>
+                  ) : notifySending ? (
+                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Đang gửi...</>
+                  ) : (
+                    <><Send size={16} /> Gửi thông báo</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

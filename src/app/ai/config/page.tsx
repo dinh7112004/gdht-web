@@ -1,139 +1,190 @@
 'use client';
 
-import React, { useState } from "react";
-import { 
-  Bot, Sparkles, Send, Bell, 
-  MessageSquare, ShieldAlert, History,
-  Save, Zap, Terminal, Code
-} from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, User, Sparkles, Zap } from 'lucide-react';
+
+interface GeminiMsg {
+  role: 'user' | 'model';
+  text: string;
+  ts: Date;
+}
+
+const GEMINI_KEY = 'AIzaSyAolq7NFqtXZj6YETh8OCyA6IJE-Omluzs';
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1/models';
+const SYSTEM_CTX = 'Bạn là trợ lý quản trị thông minh của hệ thống giáo dục GDDS Master. Hỗ trợ admin quản lý lớp học, học sinh, giáo viên, nội dung và gamification. Trả lời bằng tiếng Việt, ngắn gọn, chuyên nghiệp.';
+const HISTORY_KEY = 'gdds_ai_chat_history';
+const MAX_STORED = 100;
+
+const QUICK = [
+  'Tóm tắt hoạt động hệ thống hôm nay',
+  'Gợi ý cải thiện tỷ lệ hoàn thành bài học',
+  'Phân tích điểm mạnh của gamification',
+  'Cách tăng tương tác học sinh',
+];
+
+function fmt(d: Date | string): string {
+  return new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function AIConfigPage() {
-  const [systemPrompt, setSystemPrompt] = useState(
-    "Bạn là Rồng con di sản, một trợ lý học tập thông minh giúp học sinh tiểu học khám phá vẻ đẹp của toán học thông qua các câu chuyện di sản Việt Nam..."
-  );
+  const [msgs, setMsgs] = useState<GeminiMsg[]>(() => {
+    if (typeof window === 'undefined') return [{ role: 'model', text: 'Xin chào! Tôi là trợ lý AI của GDDS Master. Tôi có thể giúp bạn quản lý hệ thống, phân tích dữ liệu học sinh, hoặc trả lời bất kỳ câu hỏi nào. Bạn cần hỗ trợ gì?', ts: new Date() }];
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { role: 'user' | 'model'; text: string; ts: string }[];
+        if (parsed.length > 0) return parsed.map(m => ({ ...m, ts: new Date(m.ts) }));
+      }
+    } catch { /* ignore */ }
+    return [{ role: 'model', text: 'Xin chào! Tôi là trợ lý AI của GDDS Master. Tôi có thể giúp bạn quản lý hệ thống, phân tích dữ liệu học sinh, hoặc trả lời bất kỳ câu hỏi nào. Bạn cần hỗ trợ gì?', ts: new Date() }];
+  });
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(msgs.slice(-MAX_STORED))); } catch { /* ignore */ }
+  }, [msgs]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || busy) return;
+    setInput('');
+    setMsgs(p => [...p, { role: 'user', text, ts: new Date() }]);
+    setBusy(true);
+
+    const body = JSON.stringify({
+      contents: [
+        { role: 'user', parts: [{ text: SYSTEM_CTX }] },
+        { role: 'model', parts: [{ text: 'Tôi hiểu. Tôi sẽ hỗ trợ bạn quản lý hệ thống GDDS Master.' }] },
+        ...msgs.slice(1).map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+        { role: 'user', parts: [{ text }] },
+      ],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+    });
+
+    try {
+      let reply: string | null = null;
+      for (const model of GEMINI_MODELS) {
+        const res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_KEY}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body,
+        });
+        const data = await res.json();
+        if (data?.error?.code === 429) continue;
+        if (data?.error) { reply = `Lỗi: ${data.error.message ?? 'Không xác định'}`; break; }
+        const candidate = data?.candidates?.[0];
+        reply = candidate?.content?.parts?.[0]?.text ?? null;
+        if (reply && candidate?.finishReason === 'MAX_TOKENS') reply += '\n\n_(Phản hồi bị cắt ngắn. Hỏi tiếp để xem thêm.)_';
+        if (reply) break;
+      }
+      if (!reply) reply = '⚠️ Hạn mức API miễn phí đã hết cho hôm nay. Vui lòng thử lại vào ngày mai.';
+      setMsgs(p => [...p, { role: 'model', text: reply!, ts: new Date() }]);
+    } catch (err) {
+      console.error('Gemini error:', err);
+      setMsgs(p => [...p, { role: 'model', text: 'Đã xảy ra lỗi kết nối. Vui lòng thử lại.', ts: new Date() }]);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="p-8 space-y-8">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">AI & THÔNG BÁO (CONFIG)</h1>
-          <p className="text-slate-500 font-medium">Cấu hình bộ não AI và trung tâm điều phối thông báo đẩy toàn hệ thống.</p>
+    <div className="flex flex-col h-[calc(100vh-56px)] overflow-hidden" style={{ background: '#f8fafc' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 py-4 bg-white border-b border-slate-100 shrink-0">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', boxShadow: '0 4px 14px rgba(16,185,129,.25)' }}>
+          <Sparkles size={18} className="text-white" />
         </div>
-        <button className="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center gap-2">
-          <Save size={20} /> Lưu tất cả cấu hình
-        </button>
+        <div className="flex-1">
+          <p className="text-sm font-bold text-slate-800 leading-tight">Trợ lý AI Gemini</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] text-slate-400 font-medium">Gemini 2.5 / 2.0 Flash · Sẵn sàng</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+          style={{ background: '#ecfdf5', color: '#059669' }}>
+          <Zap size={11} /> GDDS AI
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* AI System Prompt Editor */}
-        <div className="lg:col-span-2 bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
-              <Bot className="text-emerald-500" /> System Prompt (Rồng Con AI)
-            </h3>
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-              GPT-4o Model
-            </span>
-          </div>
-          
-          <div className="bg-slate-900 rounded-3xl p-6 mb-6">
-            <div className="flex items-center gap-2 text-slate-500 mb-4 border-b border-slate-800 pb-2">
-              <Terminal size={14} /> <span className="text-[10px] font-bold uppercase tracking-widest">Editor context</span>
-            </div>
-            <textarea 
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              className="w-full h-64 bg-transparent border-none text-slate-300 font-mono text-sm leading-relaxed focus:ring-0 outline-none resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Max Tokens</p>
-              <input type="number" defaultValue={2000} className="bg-transparent border-none font-black text-xl text-slate-900 focus:ring-0 w-full" />
-            </div>
-            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Temperature</p>
-              <input type="number" step="0.1" defaultValue={0.7} className="bg-transparent border-none font-black text-xl text-slate-900 focus:ring-0 w-full" />
-            </div>
-          </div>
-        </div>
-
-        {/* Push Notification Sidebar */}
-        <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
-          <div>
-            <h3 className="text-xl font-black text-slate-900 flex items-center gap-3 mb-6">
-              <Bell className="text-blue-500" /> Thông báo nhanh
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Tiêu đề thông báo</label>
-                <input type="text" placeholder="Học bài thôi nào!" className="w-full p-4 bg-slate-50 rounded-2xl border-none text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ scrollbarWidth: 'thin' }}>
+        {msgs.map((m, i) => (
+          <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {m.role === 'model' && (
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: 'linear-gradient(135deg,#10b981,#059669)', boxShadow: '0 2px 8px rgba(16,185,129,.2)' }}>
+                <Sparkles size={14} className="text-white" />
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Nội dung</label>
-                <textarea placeholder="Một ngày mới đã bắt đầu, rồng con đang đợi bạn..." className="w-full h-24 p-4 bg-slate-50 rounded-2xl border-none text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
+            )}
+            <div className={`max-w-[72%] flex flex-col gap-1.5 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+              <div className="px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
+                style={m.role === 'user'
+                  ? { background: 'linear-gradient(135deg,#10b981,#059669)', color: 'white', borderBottomRightRadius: 6, boxShadow: '0 2px 12px rgba(16,185,129,.2)' }
+                  : { background: 'white', color: '#1e293b', border: '1px solid #e2e8f0', borderBottomLeftRadius: 6, boxShadow: '0 1px 6px rgba(0,0,0,.06)' }
+                }>
+                {m.text}
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Nhóm đối tượng</label>
-                <select className="w-full p-4 bg-slate-50 rounded-2xl border-none text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
-                  <option>Tất cả học sinh</option>
-                  <option>Học sinh đã offline 3 ngày</option>
-                  <option>Giáo viên khối 5</option>
-                </select>
-              </div>
-              <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
-                <Send size={18} /> Gửi ngay lập tức
-              </button>
+              <span className="text-[10px] text-slate-400 px-1">{fmt(m.ts)}</span>
             </div>
+            {m.role === 'user' && (
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
+                <User size={14} className="text-slate-500" />
+              </div>
+            )}
           </div>
-
-          <div className="pt-8 border-t border-slate-100">
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Lịch sử gửi thông báo</h4>
-            <div className="space-y-3">
-              {[
-                { title: "Sự kiện Rồng Thiếu Nhi", time: "2 giờ trước" },
-                { title: "Bài tập mới tuần 35", time: "Hôm qua" },
-              ].map((notif, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                  <div className="text-xs font-bold text-slate-700 truncate mr-2">{notif.title}</div>
-                  <div className="text-[10px] text-slate-400 whitespace-nowrap">{notif.time}</div>
-                </div>
+        ))}
+        {busy && (
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg,#10b981,#059669)' }}>
+              <Sparkles size={14} className="text-white" />
+            </div>
+            <div className="px-4 py-3 rounded-2xl bg-white border border-slate-100 flex items-center gap-2"
+              style={{ boxShadow: '0 1px 6px rgba(0,0,0,.06)' }}>
+              {[0, 150, 300].map(d => (
+                <div key={d} className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: `${d}ms` }} />
               ))}
             </div>
           </div>
-        </div>
+        )}
+        <div ref={endRef} />
       </div>
 
-      {/* AI Logs / Activity */}
-      <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <h3 className="text-xl font-black text-slate-900 flex items-center gap-3 mb-8">
-          <History className="text-slate-400" /> Log Hội thoại AI (Gần đây)
-        </h3>
-        <div className="space-y-4">
-          {[
-            { user: "Minh Học Sinh", query: "Tính diện tích hình chữ nhật trong vườn hoa Diên Hồng?", response: "Để tính diện tích hình chữ nhật, bạn lấy chiều dài nhân chiều rộng...", time: "5 phút trước" },
-            { user: "Cô Mai", query: "Tóm tắt kết quả lớp 5A tuần này?", response: "Dựa trên dữ liệu, lớp 5A có 85% học sinh hoàn thành bài tập...", time: "1 giờ trước" },
-          ].map((log, idx) => (
-            <div key={idx} className="p-6 bg-slate-50 rounded-[32px] border border-slate-100">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-black text-slate-900 uppercase">{log.user}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">{log.time}</span>
-              </div>
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-slate-200 flex-shrink-0" />
-                  <p className="text-sm text-slate-600 font-medium italic">"{log.query}"</p>
-                </div>
-                <div className="flex gap-3">
-                  <Bot size={24} className="text-emerald-500 flex-shrink-0" />
-                  <p className="text-sm text-slate-800 font-bold">{log.response}</p>
-                </div>
-              </div>
-            </div>
+      {/* Quick prompts */}
+      {msgs.length <= 1 && (
+        <div className="px-6 pb-4 flex flex-wrap gap-2">
+          {QUICK.map(q => (
+            <button key={q} onClick={() => setInput(q)}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105"
+              style={{ background: '#f0fdf4', color: '#059669', border: '1px solid #bbf7d0' }}>
+              {q}
+            </button>
           ))}
         </div>
+      )}
+
+      {/* Input */}
+      <div className="px-5 py-4 bg-white border-t border-slate-100 shrink-0">
+        <div className="flex items-end gap-3 p-1 rounded-2xl border border-slate-200 bg-slate-50 focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-50 transition-all">
+          <textarea value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
+            placeholder="Hỏi AI về hệ thống, học sinh, báo cáo..."
+            rows={1} disabled={busy}
+            className="flex-1 px-3 py-2 text-sm bg-transparent text-slate-800 placeholder-slate-400 outline-none resize-none disabled:opacity-50"
+            style={{ maxHeight: 120 }} />
+          <button onClick={() => void send()} disabled={!input.trim() || busy}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-30 shrink-0 mb-1 mr-1"
+            style={{ background: 'linear-gradient(135deg,#10b981,#059669)', boxShadow: '0 4px 12px rgba(16,185,129,.3)' }}>
+            <Send size={14} />
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-300 mt-2 ml-1">Powered by Google Gemini · Enter để gửi · Shift+Enter xuống dòng</p>
       </div>
     </div>
   );

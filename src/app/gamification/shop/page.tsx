@@ -96,15 +96,15 @@ export default function ShopManagementPage() {
   };
 
   return (
-    <div className="p-10 space-y-10 animate-fade-in">
-      <div className="flex justify-between items-end">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 lg:space-y-10 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Cửa hàng vật phẩm</h1>
           <p className="text-slate-500 font-bold mt-2">Quản lý các vật phẩm ảo, vật phẩm bổ trợ và trang trí trong hệ thống.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
-          className="bg-slate-900 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+          className="bg-slate-900 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
         >
           <Plus size={20} /> TẠO VẬT PHẨM MỚI
         </button>

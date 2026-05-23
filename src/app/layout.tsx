@@ -4,10 +4,40 @@ import { useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-import { Menu, X, Loader2 } from "lucide-react";
+import Header from "@/components/Header";
+import { Menu, X, ShieldCheck } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
-const inter = Inter({ subsets: ["latin"] });
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Tổng quan',
+  '/users': 'Người dùng',
+  '/classes': 'Lớp học',
+  '/classes/submissions': 'Nộp bài',
+  '/cms/categories': 'Danh mục',
+  '/cms/subjects': 'Môn học',
+  '/cms/lessons': 'Bài học',
+  '/cms/quizzes': 'Câu hỏi',
+  '/cms/rules': 'Quy tắc',
+  '/gamification/missions': 'Nhiệm vụ',
+  '/gamification/achievements': 'Huy hiệu',
+  '/gamification/items': 'Cửa hàng',
+  '/gamification/leaderboard': 'Xếp hạng',
+  '/reports/progress': 'Báo cáo',
+  '/community/teaching': 'Phương pháp dạy',
+  '/community/learning': 'Cách học hay',
+  '/community/posts': 'Bài viết',
+  '/community/reports': 'Báo cáo',
+  '/ai/config': 'Chat AI',
+  '/ai/chat': 'Chat',
+  '/notifications': 'Thông báo',
+  '/settings': 'Cài đặt',
+};
+
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -19,8 +49,10 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
 
+  const currentPageTitle = PAGE_TITLES[pathname] ?? 'GDDS Master';
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   useEffect(() => {
-    // Authentication Check
     const checkAuth = () => {
       const token = localStorage.getItem('userToken');
       if (!token) {
@@ -37,76 +69,144 @@ export default function RootLayout({
     };
 
     checkAuth();
-    
-    // Optional: Add event listener for storage changes (to handle logout in other tabs)
+
     const handleStorageChange = () => checkAuth();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [pathname, router]);
 
-  // Loading State
+  // Loading state
   if (isAuthenticated === null && pathname !== '/login') {
     return (
-      <html lang="en">
+      <html lang="vi" className={inter.variable}>
         <body className={inter.className}>
-          <div className="h-screen w-full flex flex-col items-center justify-center bg-[#0f172a] text-white">
-            <Loader2 className="animate-spin text-emerald-500 mb-4" size={48} />
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Initializing Secure Session...</p>
+          <div
+            className="h-screen w-full flex flex-col items-center justify-center gap-6"
+            style={{ background: 'var(--bg-base)' }}
+          >
+            {/* Logo mark */}
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                boxShadow: '0 0 32px rgba(16,185,129,0.3)',
+              }}
+            >
+              <ShieldCheck size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+
+            {/* Spinner */}
+            <div className="relative w-8 h-8">
+              <div
+                className="absolute inset-0 rounded-full border-2 border-transparent animate-spin"
+                style={{ borderTopColor: 'var(--accent)' }}
+              />
+              <div
+                className="absolute inset-1 rounded-full border border-transparent"
+                style={{ borderTopColor: 'rgba(16,185,129,0.3)' }}
+              />
+            </div>
+
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Đang xác thực phiên...
+            </p>
           </div>
         </body>
       </html>
     );
   }
 
-  // Login Page Layout
+  // Login page — no shell
   if (pathname === '/login') {
     return (
-      <html lang="en">
-        <body className={inter.className}>
-          {children}
-        </body>
+      <html lang="vi" className={inter.variable}>
+        <body className={inter.className} style={{ margin: 0 }}>{children}</body>
       </html>
     );
   }
 
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen overflow-hidden bg-[#FFFDF0]">
-          {/* Sidebar Overlay for Mobile */}
+    <html lang="vi" className={inter.variable}>
+      <body className={inter.className} style={{ background: 'var(--bg-base)', margin: 0 }}>
+        <div
+          className="flex h-screen overflow-hidden"
+          style={{ background: 'var(--bg-base)' }}
+        >
+          {/* Mobile overlay */}
           {isSidebarOpen && (
-            <div 
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden transition-all duration-300"
+            <div
+              className="fixed inset-0 z-30 lg:hidden"
+              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
               onClick={() => setIsSidebarOpen(false)}
             />
           )}
 
           {/* Sidebar */}
-          <div className={`
-            fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
-            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          `}>
-            <Sidebar />
+          <div
+            className={`
+              fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out
+              lg:relative lg:translate-x-0
+              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}
+          >
+            <Sidebar onNavigate={closeSidebar} />
           </div>
 
-          <div className="flex-1 flex flex-col overflow-hidden w-full">
-            {/* Mobile Header */}
-            <header className="lg:hidden flex items-center justify-between p-4 bg-[#FFFDF0] border-b border-[#FEF9C3] z-20">
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            {/* Mobile top bar */}
+            <div
+              className="lg:hidden flex items-center justify-between px-4 shrink-0"
+              style={{
+                height: 'var(--header-height)',
+                background: 'var(--bg-surface)',
+                borderBottom: '1px solid var(--border-subtle)',
+              }}
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                  <Menu size={20} />
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 0 12px rgba(16,185,129,0.35)',
+                  }}
+                >
+                  <ShieldCheck size={14} className="text-white" strokeWidth={2.5} />
                 </div>
-                <h1 className="text-lg font-black text-slate-800 tracking-tighter">GDDS</h1>
+                <span className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                  {currentPageTitle}
+                </span>
               </div>
-              <button 
+              <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 bg-[#FFFBEB] rounded-xl border border-[#FEF9C3] text-emerald-600"
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)';
+                }}
               >
-                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
-            </header>
+            </div>
 
-            <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#FFFDF0]">
+            {/* Desktop header */}
+            <div className="hidden lg:block shrink-0">
+              <Header />
+            </div>
+
+            {/* Page content */}
+            <main
+              className="flex-1 overflow-y-auto custom-scrollbar"
+              style={{ background: 'var(--bg-base)' }}
+            >
               <div className="max-w-[1600px] mx-auto w-full">
                 {children}
               </div>
@@ -117,4 +217,3 @@ export default function RootLayout({
     </html>
   );
 }
-

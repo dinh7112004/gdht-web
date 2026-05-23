@@ -106,15 +106,15 @@ export default function ItemsPage() {
   };
 
   return (
-    <div className="p-10 space-y-10 animate-fade-in bg-slate-50 min-h-screen">
-      <div className="flex justify-between items-end">
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 lg:space-y-10 animate-fade-in bg-white min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Quản lý Vật phẩm</h1>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Quản lý Vật phẩm</h1>
           <p className="text-slate-500 font-bold mt-2">Thiết lập các vật phẩm bổ trợ, trang trí và avatar cho cửa hàng trên App.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
-          className="bg-emerald-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+          className="bg-emerald-600 text-white px-8 py-4 rounded-[24px] font-black shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
         >
           <Plus size={20} /> THÊM VẬT PHẨM MỚI
         </button>
@@ -122,12 +122,12 @@ export default function ItemsPage() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-600 border-t-transparent"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {items.map((item) => (
-            <div key={item._id} className="bg-white rounded-[40px] border border-slate-100 p-8 premium-shadow group relative overflow-hidden transition-all hover:-translate-y-2">
+            <div key={item._id} className="bg-slate-50 rounded-[40px] border border-slate-100 p-8 shadow-sm group relative overflow-hidden transition-all hover:-translate-y-2">
               <div 
                 className="absolute top-0 right-0 w-32 h-32 opacity-10 blur-3xl pointer-events-none"
                 style={{ backgroundColor: item.color || '#3b82f6' }}
@@ -142,10 +142,10 @@ export default function ItemsPage() {
                   {item.category === 'DECORATION' ? 'KHUNG ẢNH' : item.category}
                 </span>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                  <button onClick={() => handleOpenModal(item)} className="p-2 bg-slate-50 text-slate-400 hover:text-blue-500 rounded-xl transition-all">
+                  <button onClick={() => handleOpenModal(item)} className="p-2 bg-white text-slate-600 border border-slate-100 hover:bg-emerald-600 hover:text-white rounded-xl transition-all">
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => handleDelete(item._id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-500 rounded-xl transition-all">
+                  <button onClick={() => handleDelete(item._id)} className="p-2 bg-white text-slate-600 border border-slate-100 hover:bg-rose-600 hover:text-white rounded-xl transition-all">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -153,32 +153,32 @@ export default function ItemsPage() {
 
               <div className="flex flex-col items-center mb-8">
                 <div 
-                  className="w-32 h-32 rounded-[32px] flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500"
-                  style={{ backgroundColor: (item.color || '#3b82f6') + '15' }}
+                  className="w-32 h-32 rounded-[32px] flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500 border border-slate-100"
+                  style={{ backgroundColor: '#ffffff' }}
                 >
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-contain drop-shadow-2xl" />
+                    <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-contain drop-shadow-md" />
                   ) : (
                     <Package size={48} style={{ color: item.color || '#3b82f6' }} />
                   )}
                 </div>
-                <h3 className="text-xl font-black text-slate-900 text-center leading-tight mb-2">{item.name}</h3>
-                <p className="text-slate-400 text-xs text-center line-clamp-2 h-8">{item.description}</p>
+                <h3 className="text-xl font-black text-slate-800 text-center leading-tight mb-2">{item.name}</h3>
+                <p className="text-slate-400 font-bold text-xs text-center line-clamp-2 h-8">{item.description}</p>
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-dashed border-slate-100">
+              <div className="flex justify-between items-center pt-6 border-t border-slate-100">
                 <div className="flex items-center gap-2">
                   {item.currency === 'GEMS' ? <Diamond size={18} className="text-purple-500" /> : <Zap size={18} className="text-amber-500" />}
-                  <span className="text-xl font-black text-slate-900">{item.price.toLocaleString()}</span>
+                  <span className="text-xl font-black text-slate-800">{item.price.toLocaleString()}</span>
                 </div>
-                <span className={`text-[10px] font-black ${item.isAvailable ? 'text-emerald-500' : 'text-slate-300'}`}>
+                <span className={`text-[10px] font-black ${item.isAvailable ? 'text-emerald-600' : 'text-slate-455'}`}>
                   {item.isAvailable ? 'ĐANG BÁN' : 'TẠM NGƯNG'}
                 </span>
               </div>
             </div>
           ))}
           {items.length === 0 && (
-             <div className="col-span-full py-20 text-center bg-white rounded-[48px] border border-dashed border-slate-200">
+             <div className="col-span-full py-20 text-center bg-slate-50 rounded-[48px] border border-dashed border-slate-100">
                 <Package size={64} className="mx-auto text-slate-200 mb-4" />
                 <p className="text-slate-400 font-bold">Chưa có vật phẩm nào được tạo.</p>
              </div>
@@ -188,16 +188,19 @@ export default function ItemsPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-12">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[48px] border border-slate-100 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-8 right-8 p-3 bg-slate-50 text-slate-400 hover:text-slate-800 rounded-2xl border border-slate-100 transition-all"
+            >
+              <X size={20} />
+            </button>
+            <div className="p-6 sm:p-10">
               <div className="flex justify-between items-center mb-10">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tighter uppercase">
                   {editingItem ? 'Cập nhật vật phẩm' : 'Tạo vật phẩm mới'}
                 </h2>
-                <button onClick={() => setIsModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl transition-all">
-                  <X size={24} />
-                </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-8">
@@ -209,7 +212,7 @@ export default function ItemsPage() {
                       required
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="Ví dụ: Mũ Rồng Xanh"
                     />
                   </div>
@@ -218,7 +221,7 @@ export default function ItemsPage() {
                     <select 
                       value={formData.category}
                       onChange={e => setFormData({...formData, category: e.target.value})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer appearance-none"
                     >
                       <option value="BOOST">Vật phẩm bổ trợ (Boost)</option>
                       <option value="DECORATION">Trang trí (Khung ảnh)</option>
@@ -232,7 +235,7 @@ export default function ItemsPage() {
                     <select 
                       value={formData.code}
                       onChange={e => setFormData({...formData, code: e.target.value})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer appearance-none"
                     >
                       {supportedFunctions.map(fn => (
                         <option key={fn.code} value={fn.code}>{fn.label}</option>
@@ -246,7 +249,7 @@ export default function ItemsPage() {
                   <textarea 
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none h-24 resize-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-600 font-bold focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none"
                     placeholder="Công dụng của vật phẩm này..."
                   />
                 </div>
@@ -259,7 +262,7 @@ export default function ItemsPage() {
                       required
                       value={formData.price}
                       onChange={e => setFormData({...formData, price: Number(e.target.value)})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </div>
                   <div className="space-y-3">
@@ -270,8 +273,8 @@ export default function ItemsPage() {
                           key={cur}
                           type="button"
                           onClick={() => setFormData({...formData, currency: cur})}
-                          className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all ${
-                            formData.currency === cur ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                          className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border ${
+                            formData.currency === cur ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100 hover:bg-white'
                           }`}
                         >
                           {cur}
@@ -288,7 +291,7 @@ export default function ItemsPage() {
                       type="text" 
                       value={formData.imageUrl}
                       onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="https://..."
                     />
                   </div>
@@ -298,7 +301,7 @@ export default function ItemsPage() {
                       type="text" 
                       value={formData.color}
                       onChange={e => setFormData({...formData, color: e.target.value})}
-                      className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-slate-900 transition-all outline-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
                       placeholder="#3b82f6"
                     />
                   </div>
@@ -319,13 +322,13 @@ export default function ItemsPage() {
                   <button 
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-8 py-4 rounded-[20px] font-black text-slate-400 hover:text-slate-900 transition-all"
+                    className="px-8 py-4 rounded-[20px] font-black text-slate-400 hover:text-slate-800 transition-all"
                   >
                     HỦY BỎ
                   </button>
                   <button 
                     type="submit"
-                    className="bg-emerald-600 text-white px-12 py-4 rounded-[20px] font-black shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4 rounded-[20px] font-black shadow-md shadow-emerald-600/10 active:scale-95 transition-all"
                   >
                     {editingItem ? 'CẬP NHẬT' : 'TẠO NGAY'}
                   </button>

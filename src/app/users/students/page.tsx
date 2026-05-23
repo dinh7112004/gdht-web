@@ -70,7 +70,7 @@ export default function Student360() {
         </div>
       </div>
 
-      <div className="p-10 max-w-[1600px] mx-auto animate-fade-in">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto animate-fade-in">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           
           {/* Left Column: Profile Card */}
