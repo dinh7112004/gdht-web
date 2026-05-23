@@ -9,7 +9,7 @@ interface GeminiMsg {
   ts: Date;
 }
 
-const GEMINI_KEY = 'AIzaSyAolq7NFqtXZj6YETh8OCyA6IJE-Omluzs';
+const GEMINI_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1/models';
 const SYSTEM_CTX = 'Bạn là trợ lý quản trị thông minh của hệ thống giáo dục GDDS Master. Hỗ trợ admin quản lý lớp học, học sinh, giáo viên, nội dung và gamification. Trả lời bằng tiếng Việt, ngắn gọn, chuyên nghiệp.';
